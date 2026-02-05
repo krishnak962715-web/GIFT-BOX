@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIFT BOX</title>
+    <style>
+        :root { --primary: #9c27b0; --bg: #f8f9fa; --success: #28a745; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg); overflow-x: hidden; }
+        
+        header { 
+            background: white; padding: 15px; display: flex; align-items: center; 
+            border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 100; 
+        }
+        .home-btn { 
+            font-size: 20px; cursor: pointer; color: var(--primary); 
+            position: absolute; left: 15px; background: none; border: none;
+        }
+        #gift-box-title { 
+            color: var(--primary); font-weight: bold; font-size: 24px; 
+            cursor: pointer; user-select: none; width: 100%; text-align: center; 
+        }
+
+        .container { padding: 10px; max-width: 800px; margin: auto; }
+        .product-grid { display: flex; overflow-x: auto; gap: 15px; padding: 10px 0; scrollbar-width: none; }
+        .product-card { min-width: 160px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
+        .product-card img { width: 100%; height: 180px; object-fit: cover; }
+        .product-info { padding: 10px; font-size: 14px; }
+
+        .page { display: none; padding: 20px; animation: fadeIn 0.3s; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .form-group { margin-bottom: 20px; border-bottom: 1px solid #ccc; }
+        input, select { width: 100%; border: none; padding: 10px 0; outline: none; font-size: 16px; background: transparent; }
+        .btn-main { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 5px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .btn-location { color: var(--primary); border: 1px solid var(--primary); background: transparent; padding: 5px 10px; border-radius: 20px; float: right; font-size: 12px; font-weight: bold; }
+
+        #success-page { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--success); color: white; text-align: center; 
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
+        }
+        #success-page.active { display: flex; animation: slideUp 0.5s ease-out; }
+        .checkmark { font-size: 100px; animation: zoomCheck 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-bottom: 20px; }
+        
+        @keyframes zoomCheck { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <button class="home-btn" onclick="showPage('home-page')">🏠</button>
+    <div id="gift-box-title" onclick="handleTitleClick()">GIFT BOX</div>
+</header>
+
+<div class="container">
+    <div id="home-page" class="page active">
+        <h3 style="margin-bottom:10px;">Products For You</h3>
+        <div id="product-list" class="product-grid">Loading products...</div>
+    </div>
+
+    <div id="detail-page" class="page">
+        <button onclick="showPage('home-page')" style="border:none; background:none; color:var(--primary); font-weight:bold; cursor:pointer; margin-bottom: 10px;">← Back</button>
+        <div id="detail-content" style="background:white; padding:15px; border-radius:10px;"></div>
+        <button class="btn-main" onclick="showPage('address-page')">Order Now</button>
+    </div>
+
+    <div id="address-page" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+            <h3>Delivery Address</h3>
+            <button class="btn-location" onclick="getLocation()">⊕ Use My Location</button>
+        </div>
+        <div class="form-group"><input type="text" id="house" placeholder="House no./ Building name"></div>
+        <div class="form-group"><input type="text" id="area" placeholder="Road name / Area / Colony"></div>
+        <div class="form-group"><input type="number" id="pincode" placeholder="Pincode"></div>
+        <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;"><input type="text" id="city" placeholder="City"></div>
+            <div class="form-group" style="flex:1;">
+                <select id="state">
+                    <option value="">Select State</option>
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Bihar">Bihar</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Haryana">Haryana</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="West Bengal">West Bengal</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group"><input type="text" id="landmark" placeholder="Nearby Famous Place (Optional)"></div>
+        <h3>Contact Information</h3>
+        <div class="form-group"><input type="text" id="cust-name" placeholder="Full Name"></div>
+        <div class="form-group"><input type="number" id="cust-phone" placeholder="Contact Number"></div>
+        <p>Payment: <b>Cash on Delivery</b></p>
+        <button class="btn-main" style="background:#b02781;" onclick="placeOrder()">Place Order</button>
+    </div>
+
+    <div id="admin-page" class="page">
+        <h2>Admin Dashboard</h2>
+        <div class="form-group"><input type="text" id="p-name" placeholder="Product Name"></div>
+        <div class="form-group"><input type="text" id="p-img" placeholder="GitHub Image URL"></div>
+        <div class="form-group"><input type="text" id="p-price" placeholder="Price (₹)"></div>
+        <button class="btn-main" onclick="addProduct()">Add Product to Online Store</button>
+        <button onclick="deleteAllProducts()" style="margin-top:50px; color:red; border:none; background:none; cursor:pointer; font-weight:bold; width:100%;">❌ DELETE ALL PRODUCTS FROM DATABASE</button>
+    </div>
+</div>
+
+<div id="success-page">
+    <div class="checkmark">✔</div>
+    <h1>Order Successful</h1>
+    <p>Your order has been confirmed!</p>
+    <button onclick="goToHome()" style="margin-top:40px; padding:12px 50px; border-radius:30px; border:none; color:var(--success); background:white; font-weight:bold; cursor:pointer;">Done</button>
+</div>
+
+<script>
+    const FIREBASE_URL = "https://gift-box-a19e9-default-rtdb.firebaseio.com/products.json";
+    
+    let clickCount = 0;
+    let selectedProduct = null;
+    let productsList = [];
+
+    async function loadProducts() {
+        try {
+            const response = await fetch(FIREBASE_URL);
+            const data = await response.json();
+            const list = document.getElementById('product-list');
+            
+            if (!data) {
+                productsList = [];
+                list.innerHTML = "<p style='padding:20px;'>No products available yet.</p>";
+                return;
+            }
+
+            // FILTER: This removes any 'undefined' or empty items from the list
+            productsList = Object.values(data).filter(p => p && p.name && p.img);
+            
+            renderProducts();
+        } catch (e) {
+            document.getElementById('product-list').innerHTML = "Store update required.";
+        }
+    }
+
+    function renderProducts() {
+        const list = document.getElementById('product-list');
+        list.innerHTML = productsList.map((p, index) => `
+            <div class="product-card" onclick="viewProduct(${index})">
+                <img src="${p.img}">
+                <div class="product-info">
+                    <b>${p.name}</b><br>
+                    <span>₹${p.price}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function addProduct() {
+        const p = {
+            name: document.getElementById('p-name').value,
+            img: document.getElementById('p-img').value,
+            price: document.getElementById('p-price').value
+        };
+        if(!p.name || !p.img) return alert("Fill all details!");
+
+        await fetch(FIREBASE_URL, {
+            method: 'POST',
+            body: JSON.stringify(p)
+        });
+        alert("Product Added Successfully!");
+        loadProducts();
+        showPage('home-page');
+    }
+
+    async function deleteAllProducts() {
+        if(confirm("Are you sure? This will delete EVERYTHING from the online store!")) {
+            await fetch(FIREBASE_URL, { method: 'DELETE' });
+            alert("All products deleted!");
+            loadProducts();
+            showPage('home-page');
+        }
+    }
+
+    function viewProduct(index) {
+        selectedProduct = productsList[index];
+        document.getElementById('detail-content').innerHTML = `
+            <img src="${selectedProduct.img}" style="width:100%; border-radius:10px;">
+            <h2 style="margin:10px 0;">${selectedProduct.name}</h2>
+            <h1>₹${selectedProduct.price}</h1>
+        `;
+        showPage('detail-page');
+    }
+
+    async function placeOrder() {
+        const botToken = "8568409671:AAGlAn43OHQPUL-Pj4IWHk9sQ10YZjRvoio";
+        const chatId = "7503928926";
+        const details = `✅ *NEW ORDER*\nProduct: ${selectedProduct.name}\nPrice: ₹${selectedProduct.price}\n---\nName: ${document.getElementById('cust-name').value}\nPhone: ${document.getElementById('cust-phone').value}\nAddress: ${document.getElementById('house').value}, ${document.getElementById('city').value}\nPincode: ${document.getElementById('pincode').value}`;
+
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(details)}&parse_mode=Markdown`);
+        document.getElementById('success-page').classList.add('active');
+    }
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        window.scrollTo(0,0);
+    }
+
+    function goToHome() {
+        document.getElementById('success-page').classList.remove('active');
+        showPage('home-page');
+        document.querySelectorAll('input').forEach(i => i.value = '');
+    }
+
+    function handleTitleClick() {
+        clickCount++;
+        if (clickCount === 15) {
+            if (prompt("Enter Password:") === "KRISHNA") showPage('admin-page');
+            clickCount = 0;
+        }
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                    const data = await response.json();
+                    if(data.address) {
+                        document.getElementById('city').value = data.address.city || data.address.town || data.address.village || "";
+                        document.getElementById('pincode').value = data.address.postcode || "";
+                        alert("Location filled successfully!");
+                    }
+                } catch(e) { alert("Enable location permissions."); }
+            }, () => alert("Location access denied."));
+        }
+    }
+
+    loadProducts();
+</script>
+</body>
+</html>
